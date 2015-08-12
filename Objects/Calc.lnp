@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\clac.obj" 
+TO ".\Objects\Calc" 
+PRINT(".\Listings\Calc.m51")

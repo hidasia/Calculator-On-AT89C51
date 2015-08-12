@@ -1,0 +1,224 @@
+C51 COMPILER V9.54   CLAC                                                                  08/12/2015 13:32:27 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CLAC
+OBJECT MODULE PLACED IN .\Objects\clac.obj
+COMPILER INVOKED BY: D:\Program Files\Keil\C51\BIN\C51.EXE clac.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Li
+                    -stings\clac.lst) TABS(2) OBJECT(.\Objects\clac.obj)
+
+line level    source
+
+   1          #include "reg51.h"
+   2          #include "intrins.h"
+   3          #define Display   P0
+   4          #define Matrix    P1
+   5          sbit Z = P2^2;
+   6          sbit Y = P2^3;
+   7          sbit X = P2^4;
+   8          
+   9          unsigned char code list[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f};    //ÔÚÊýÂë¹ÜÉ
+             -Ï0~9¶ÔÓ¦µÄHex
+  10          unsigned char Record[8] = {0};
+  11          unsigned int  FirstNum, SecNum = 0, result = 0;
+  12          unsigned char KeyValue = 0;         //¼ÇÂ¼°´¼üÐòºÅ
+  13          unsigned char i = 0;                //¼ÇÂ¼ÒÑ¾­ÊäÈëÁË¶àÉÙ¸öÊý×Ö
+  14          void Delay10ms();                   //ÑÓÊ±10ms
+  15          void Delay20ms();                   //ÑÓÊ±20ms
+  16          void KeyScan();                     //É¨Ãè¾ØÕó°´¼üÒÔ¶¨Î»£¬È·¶¨ÊäÈëµÄÊýÖµ
+  17          void Show();                        //ÔÚ¶¯Ì¬ÊýÂë¹ÜÉÏÏÔÊ¾ÐÅÏ¢
+  18          void Constr();
+  19          void Deconstr();
+  20          void Trans();
+  21          void Init();                        //Initialization£¬³õÊ¼»¯
+  22          
+  23          void main(void)
+  24          {
+  25   1        Display = 0x3f;
+  26   1        
+  27   1        while (1)
+  28   1        {
+  29   2          Matrix = 0x0f;
+  30   2          if (Matrix != 0x0f)
+  31   2          {
+  32   3            KeyScan();
+  33   3            Trans();
+  34   3            switch (KeyValue)
+  35   3            {
+  36   4              case 0:
+  37   4              case 1:
+  38   4              case 2:
+  39   4              case 3:
+  40   4              case 4:
+  41   4              case 5:
+  42   4              case 6:
+  43   4              case 7:
+  44   4              case 8:
+  45   4              case 9:
+  46   4              {
+  47   5                unsigned char j;
+  48   5                i++;
+  49   5                if (i == 1)
+  50   5                  Record[0] = KeyValue;
+  51   5                else
+  52   5                  for (j = i ; j > 0; j--)
+  53   5                    Record[j] = Record[j - 1];
+C51 COMPILER V9.54   CLAC                                                                  08/12/2015 13:32:27 PAGE 2   
+
+  54   5                Record[0] = KeyValue;
+  55   5                KeyValue = 16;
+  56   5                Show();
+  57   5                break;
+  58   5              }
+  59   4        //      case 'c':
+  60   4        //      case 'a':
+  61   4        //      case 'm':
+  62   4        //      case 'M':
+  63   4        //      case 'd':
+  64   4            }
+  65   3          }
+  66   2          Show();
+  67   2        }
+  68   1      }
+  69          
+  70          /*------------------------ÑÓÊ±º¯Êý-----------------------------*/
+  71          void Delay10ms()    //@11.0592MHz
+  72          {
+  73   1        unsigned char i, j;
+  74   1      
+  75   1        i = 108;
+  76   1        j = 145;
+  77   1        do
+  78   1        {
+  79   2          while (--j);
+  80   2        } while (--i);
+  81   1      }
+  82          
+  83          void Delay20ms()    //@11.0592MHz
+  84          {
+  85   1        unsigned char i, j, k;
+  86   1      
+  87   1        _nop_();
+  88   1        _nop_();
+  89   1        i = 1;
+  90   1        j = 216;
+  91   1        k = 35;
+  92   1        do
+  93   1        {
+  94   2          do
+  95   2          {
+  96   3            while (--k);
+  97   3          } while (--j);
+  98   2        } while (--i);
+  99   1      }
+ 100          /*-------------------------É¨Ãè¾ØÕó¼üÅÌ------------------------*/
+ 101          void KeyScan()
+ 102          {
+ 103   1        if (Matrix != 0x0f)
+ 104   1          Delay10ms();
+ 105   1        {
+ 106   2          if (Matrix != 0x0f)
+ 107   2          {
+ 108   3      //      Matrix = 0x0f;
+ 109   3            KeyValue = 0;
+ 110   3            switch (Matrix)
+ 111   3              {
+ 112   4                case 0x07:
+ 113   4                  KeyValue = 1; break;
+ 114   4                case 0x0b:
+ 115   4                  KeyValue = 2; break;
+C51 COMPILER V9.54   CLAC                                                                  08/12/2015 13:32:27 PAGE 3   
+
+ 116   4                case 0x0d:
+ 117   4                  KeyValue = 3; break;
+ 118   4                case 0x0e:
+ 119   4                  KeyValue = 4; break;
+ 120   4              }
+ 121   3            Matrix = 0xf0;
+ 122   3            switch (Matrix)
+ 123   3            {
+ 124   4              case 0xe0:
+ 125   4                break;
+ 126   4              case 0xd0:
+ 127   4                KeyValue = KeyValue + 1 * 4; break;
+ 128   4              case 0xb0:
+ 129   4                KeyValue = KeyValue + 2 * 4; break;
+ 130   4              case 0x70:
+ 131   4                KeyValue = KeyValue + 3 * 4; break;
+ 132   4            }
+ 133   3          }
+ 134   2        }
+ 135   1        Delay20ms();
+ 136   1      }
+ 137          /*-----------------¸ù¾Ý°´¼üÐòºÅ¶¨Òå°´¼üµÄ¹¦ÄÜ---------------------*/
+ 138          void Trans()
+ 139          {
+ 140   1        switch (KeyValue)
+ 141   1        {
+ 142   2          case 1: KeyValue = 'c'; break; //ÇåÁã£¬clean
+ 143   2          case 2: KeyValue = 1; break;
+ 144   2          case 3: KeyValue = 4; break;
+ 145   2          case 4: KeyValue = 7; break;
+ 146   2          case 5: KeyValue = 0; break;
+ 147   2          case 6: KeyValue = 2; break;
+ 148   2          case 7: KeyValue = 5; break;
+ 149   2          case 8: KeyValue = 8; break;
+ 150   2          case 9: KeyValue = 'e'; break; //µÈÓÚ£¬equal
+ 151   2          case 10: KeyValue = 3; break;
+ 152   2          case 11: KeyValue = 6; break;
+ 153   2          case 12: KeyValue = 9; break;
+ 154   2          case 13: KeyValue = 'a'; break; //¼Ó£¬add
+ 155   2          case 14: KeyValue = 'm'; break; //¼õ£¬minus
+ 156   2          case 15: KeyValue = 'M'; break; //³Ë£¬Multiplication
+ 157   2          case 16: KeyValue = 'd'; break; //³ýÒÔ£¬Division
+ 158   2        }
+ 159   1      }
+ 160          /*--------------------ÔÚ¶¯Ì¬ÊýÂë¹ÜÉÏÏÔÊ¾ÐÅÏ¢---------------------*/
+ 161          void Show()
+ 162          {
+ 163   1        int j, x; 
+ 164   1        for (j = 0; j < i; j++)
+ 165   1        {
+ 166   2          switch(j)
+ 167   2          {
+ 168   3            case 0:
+ 169   3              X = 1; Y = 1; Z = 1; break;
+ 170   3            case 1:
+ 171   3              X = 1, Y = 1; Z = 0; break;
+ 172   3            case 2:
+ 173   3              X = 1; Y = 0; Z = 1; break;
+ 174   3            case 3:
+ 175   3              X = 1; Y = 0; Z = 0; break;
+ 176   3            case 4:
+ 177   3              X = 0; Y = 1; Z = 1; break;
+C51 COMPILER V9.54   CLAC                                                                  08/12/2015 13:32:27 PAGE 4   
+
+ 178   3            case 5:
+ 179   3              X = 0, Y = 1; Z = 0; break;
+ 180   3            case 6:
+ 181   3              X = 0; Y = 0; Z = 1; break;
+ 182   3            case 7:
+ 183   3              X = 0; Y = 0; Z = 0; break;
+ 184   3          }
+ 185   2          Display = list[Record[j]];
+ 186   2          x = 10;
+ 187   2          while (x--);
+ 188   2          Display = 0x00;
+ 189   2        }
+ 190   1      }
+ 191          void Init()
+ 192          {
+ 193   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    468    ----
+   CONSTANT SIZE    =     10    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
