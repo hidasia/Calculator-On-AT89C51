@@ -7,23 +7,23 @@ sbit Y = P2^3;
 sbit X = P2^4;
 
 unsigned char code list[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f};    //在数码管上0~9对应的Hex
-unsigned char Record[8] = {0};
-unsigned int  FirstNum, SecNum = 0, result = 0;
-unsigned char KeyValue = 0;         //记录按键序号
-unsigned char i = 0;                //记录已经输入了多少个数字
-void Delay10ms();					          //延时10ms
-void Delay20ms();					          //延时20ms
-void KeyScan();						          //扫描矩阵按键以定位，确定输入的数值
-void Show();							          //在动态数码管上显示信息
-void Constr();
+unsigned char Record[8];
+long int  FirstNum, SecNum = 0, result = 0;								//在Keil，long占4个字节，范围 -2147483648~+2147483647 
+unsigned char KeyValue = 0;                               //记录按键序号
+unsigned char i = 0;                                      //记录已经输入了多少个数字
+unsigned char Law;                                        //记录运算法则
+void Delay10ms();					                                //延时10ms
+void Delay20ms();					                                //延时20ms
+void KeyScan();						                                //扫描矩阵按键以定位，确定输入的数值
+void Show();							                                //在动态数码管上显示信息
+long int Constr();
 void Deconstr();
 void Trans();
 void Init();			                  //Initialization，初始化
 
 void main(void)
 {
-	Display = 0x3f;
-	
+	Init();
 	while (1)
 	{
 		Matrix = 0x0f;
@@ -56,11 +56,59 @@ void main(void)
 					Show();
 					break;
 				}
-	//			case 'c':
-	//			case 'a':
-	//			case 'm':
-	//			case 'M':
-	//			case 'd':
+			  case 'c': 
+				{
+				Init();
+				break;
+				}
+	  		case 'a': 
+				{
+					FirstNum = Constr();
+					Law = 'a';
+					Init();
+					break;
+				}
+			  case 'm':
+				{
+					FirstNum = Constr();
+					Law = 'm';
+					Init();
+					break;
+				}
+			  case 'M':
+				{
+					FirstNum = Constr();
+					Law = 'M';
+					Init();
+					break;
+				}
+  			case 'd':
+				{
+					FirstNum = Constr();
+					Law = 'd';
+					Init();
+					break;
+				}
+				case 'e':
+				{
+					if (FirstNum == 0)
+						_nop_();
+					else 
+					{
+						SecNum = Constr();
+						switch (Law)
+						{
+							case 'a': result = FirstNum + SecNum; break;
+							case 'm': result = FirstNum - SecNum; break;                                  
+							case 'M': result = FirstNum * SecNum; break;
+							case 'd': result = FirstNum / SecNum; break;                              //目前看来，除法运算并不完善：1.变量使用 long int。2.尚未解决小数点的问题
+						}
+						Deconstr();
+						i = 7;
+						for (i = 0; Record[i] != 0; i++);
+						Show();
+					}
+				}
 			}
 		}
 		Show();
@@ -188,6 +236,34 @@ void Show()
 		Display = 0x00;
 	}
 }
+/*-----------------------合成实际输入的数值------------------------*/
+long int Constr()
+{
+	unsigned char a, b;
+	long int Temp;
+	for (a = 0, b = 1, Temp = 0; a <= 7; a++)
+	{
+		Temp = Temp + Record[a] * b;
+		b *= 10;
+	}
+	return Temp;
+}
+/*-----------------------解构运算结果到计算器的各个数码管上---------*/
+void Deconstr()
+{
+	unsigned char a;
+	for (a = 0; a<= 7; a++)
+	{
+		Record[a] = result % 10;
+		result = (result - Record[a]) / 10;
+	}
+}
+
 void Init()
 {
+	X = 1; Y = 1; Z = 1;
+	Display = 0x3f;
+	for (i = 0; i <= 7; i++)
+	  Record[i] = 0;
+	i = 0;
 }
