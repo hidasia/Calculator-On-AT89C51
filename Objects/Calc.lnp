@@ -1,4 +1,4 @@
 ".\Objects\STARTUP.obj",
-".\Objects\clac.obj" 
+".\Objects\calc.obj" 
 TO ".\Objects\Calc" 
 PRINT(".\Listings\Calc.m51")

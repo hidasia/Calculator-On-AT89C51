@@ -7,10 +7,11 @@ sbit Y = P2^3;
 sbit X = P2^4;
 
 unsigned char code list[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f};    //在数码管上0~9对应的Hex
-unsigned char Record[8];
+long int Record[8];
 long int  FirstNum, SecNum = 0, result = 0;								//在Keil，long占4个字节，范围 -2147483648~+2147483647 
+long int  result_copy, SecNum_copy = 0;                   //复制result的数值，因为result会被解构；通过判断result_copy值是否为零来正常显示结果
 unsigned char KeyValue = 0;                               //记录按键序号
-unsigned char i = 0;                                      //记录已经输入了多少个数字
+unsigned char i = 0, e = 0;                               //i记录0~9按键按下了多少次，e记录等号按下的次数，e的作用详见Line 99~101
 unsigned char Law;                                        //记录运算法则
 void Delay10ms();					                                //延时10ms
 void Delay20ms();					                                //延时20ms
@@ -19,7 +20,7 @@ void Show();							                                //在动态数码管上显示信息
 long int Constr();
 void Deconstr();
 void Trans();
-void Init();			                  //Initialization，初始化
+void Init();			                                        //Initialization，初始化
 
 void main(void)
 {
@@ -63,50 +64,55 @@ void main(void)
 				}
 	  		case 'a': 
 				{
-					FirstNum = Constr();
+					result = Constr();
 					Law = 'a';
 					Init();
 					break;
 				}
 			  case 'm':
 				{
-					FirstNum = Constr();
+					result = Constr();
 					Law = 'm';
 					Init();
 					break;
 				}
 			  case 'M':
 				{
-					FirstNum = Constr();
+					result = Constr();
 					Law = 'M';
 					Init();
 					break;
 				}
   			case 'd':
 				{
-					FirstNum = Constr();
+					result = Constr();
 					Law = 'd';
 					Init();
 					break;
 				}
 				case 'e':
 				{
-					if (FirstNum == 0)
+					if (result == 0)
 						_nop_();
 					else 
 					{
-						SecNum = Constr();
+						if (e == 0)																																//如果e = 0，那么SecNum会重新赋值，当第二次或之后按下+ - * / 时，e的值会清零（Init()的功能），以重新记录SecNum
+						  SecNum = Constr();
+						e++;																																			//
 						switch (Law)
 						{
-							case 'a': result = FirstNum + SecNum; break;
-							case 'm': result = FirstNum - SecNum; break;                                  
-							case 'M': result = FirstNum * SecNum; break;
-							case 'd': result = FirstNum / SecNum; break;                              //目前看来，除法运算并不完善：1.变量使用 long int。2.尚未解决小数点的问题
+							case 'a': result = result + SecNum; break;
+							case 'm': result = result - SecNum; break;                                  
+							case 'M': result = result * SecNum; break;
+							case 'd': result = result / SecNum; break;                              //目前看来，除法运算并不完善：1.变量使用 long int。2.尚未解决小数点的问题
 						}
 						Deconstr();
+						result = result_copy;
 						i = 7;
-						for (i = 0; Record[i] != 0; i++);
-						Show();
+            for (i = 7; Record[i] == 0; i--);
+						i++;
+						if (result_copy == 0)
+							i = 1;
 					}
 				}
 			}
@@ -252,18 +258,20 @@ long int Constr()
 void Deconstr()
 {
 	unsigned char a;
+	result_copy = result;
 	for (a = 0; a<= 7; a++)
 	{
 		Record[a] = result % 10;
 		result = (result - Record[a]) / 10;
 	}
 }
-
+/*-------------------------初始化计算器，令其回到刚启动时的状态------*/
 void Init()
 {
 	X = 1; Y = 1; Z = 1;
 	Display = 0x3f;
 	for (i = 0; i <= 7; i++)
 	  Record[i] = 0;
-	i = 0;
+	i = 0;																																		//0~9按键计数归零
+	e = 0;																																		//等号按下次数归零
 }
